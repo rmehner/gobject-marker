@@ -29,6 +29,7 @@ var outputFile = flag.String("outputFile", "./samples.txt", "path to the output 
 var imagePath string
 var markedAbsPath string
 var relPathToMarkedFromOutput string
+var outputAbsPath string
 
 func init() {
 	flag.Usage = usage
@@ -41,34 +42,27 @@ func init() {
 	imagePath = filepath.Clean(flag.Arg(0))
 	markedAbsPath, _ = filepath.Abs(filepath.Join(imagePath, "marked"))
 	rand.Seed(time.Now().UnixNano())
+
+	outputAbsPath, _ = filepath.Abs(*outputFile)
+	outputAbsDir, _ := filepath.Split(outputAbsPath)
+	relPathToMarkedFromOutput, _ = filepath.Rel(outputAbsDir, markedAbsPath)
 }
 
 func main() {
-	// TODO
+	// @TODO
 	// * check if it is directory
 	// * check if we're allowed to write in that directory
 	_, err := os.Stat(imagePath)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
-		os.Exit(2)
+		os.Exit(1)
 	}
-
-	/*
-		outputAbsPath, _ := filepath.Abs(*outputFile)
-		outputAbsDir, _ := filepath.Split(outputAbsPath)
-
-		relPathToMarkedFromOutput, relErr := filepath.Rel(outputAbsDir, markedAbsPath)
-		if relErr != nil {
-			fmt.Printf("Error finding relative path to marked directory: %v\n", relErr)
-			os.Exit(3)
-		}
-	*/
 
 	// try to create the marked images directory
 	fileErr := os.Mkdir(markedAbsPath, 0666)
 	if fileErr != nil && !os.IsExist(fileErr) {
 		fmt.Printf("Error creating directory for marked imags: %v\n", fileErr)
-		os.Exit(4)
+		os.Exit(2)
 	}
 
 	fmt.Printf("Starting gobject marker for directory %s on http://localhost:%d\n", imagePath, *port)
@@ -102,7 +96,7 @@ func imagesHandler(writer http.ResponseWriter, request *http.Request) {
 	logRequest(request)
 
 	imageName := request.URL.Path[len("/images/"):]
-	pathToImage := imagePath + "/" + imageName
+	pathToImage := filepath.Join(imagePath, imageName)
 	method := request.Method
 
 	if len(imageName) == 0 {
@@ -110,23 +104,43 @@ func imagesHandler(writer http.ResponseWriter, request *http.Request) {
 	} else if method == "GET" {
 		http.ServeFile(writer, request, pathToImage)
 	} else if method == "POST" {
-		body, bodyErr := ioutil.ReadAll(request.Body)
+		body, err := ioutil.ReadAll(request.Body)
 
-		if bodyErr != nil {
-			fmt.Fprintf(os.Stderr, "Error parsing request body: %v\n", bodyErr)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error parsing request body: %v\n", err)
 			http.Error(writer, "Unprocessable Entitiy", 422)
 		}
 
 		var markedObjects []MarkedObject
-		jsonErr := json.Unmarshal(body, &markedObjects)
+		err = json.Unmarshal(body, &markedObjects)
 
-		if jsonErr != nil {
-			fmt.Fprintf(os.Stderr, "Error parsing JSON: %v\n", jsonErr)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error parsing JSON: %v\n", err)
 			http.Error(writer, "Unprocessable Entitiy", 422)
 		}
 
-		// save to file
-		// move file
+		markedImagePath := filepath.Join(relPathToMarkedFromOutput, imageName)
+		outputString := fmt.Sprintf("%s %d", markedImagePath, len(markedObjects))
+
+		for _, el := range markedObjects {
+			outputString += fmt.Sprintf(" %d %d %d %d", el.X, el.Y, el.Width, el.Height)
+		}
+
+		outputString += "\n"
+		_, err = appendToOutputfile(outputString)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing to file: %v\n", err)
+			http.Error(writer, "Error writing to output file", http.StatusInternalServerError)
+		} else {
+			http.Error(writer, "Marked objects added", http.StatusCreated)
+
+			err = os.Rename(pathToImage, markedImagePath)
+
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error moving file: %v\n", err)
+			}
+		}
 	} else {
 		http.Error(writer, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
@@ -135,9 +149,9 @@ func imagesHandler(writer http.ResponseWriter, request *http.Request) {
 func randomImageHandler(writer http.ResponseWriter, request *http.Request) {
 	logRequest(request)
 
-	// ignore ALL the errors!
-	// also, this is gonna be slow, because we read the dir with every request
-	// will have to fix that later on
+	// @TODO
+	// * Do not ignore errors
+	// * better way to get random file in directory, current way will be slow
 	files, _ := ioutil.ReadDir(imagePath)
 	randomImage := files[randomIntWithMax(len(files))]
 	imageUrl := Image{imageUrlFor(randomImage)}
@@ -166,4 +180,18 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "Options:\n")
 	flag.PrintDefaults()
 	os.Exit(1)
+}
+
+func appendToOutputfile(outputString string) (ret int, err error) {
+	// open up output file
+	outputFileHandle, err := os.OpenFile(outputAbsPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error opening output file %s: %v\n", outputAbsPath, err)
+	}
+
+	// @TODO remember fileHandle to prevent reopening this file again & again
+	defer outputFileHandle.Close()
+
+	return outputFileHandle.WriteString(outputString)
 }
