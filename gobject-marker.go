@@ -54,15 +54,13 @@ func main() {
 	// * check if we're allowed to write in that directory
 	_, err := os.Stat(imagePath)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-		os.Exit(1)
+		logErrorAndExit(err, 2)
 	}
 
 	// try to create the marked images directory
 	fileErr := os.Mkdir(markedAbsPath, 0666)
 	if fileErr != nil && !os.IsExist(fileErr) {
-		fmt.Printf("Error creating directory for marked imags: %v\n", fileErr)
-		os.Exit(2)
+		logErrorAndExit(fileErr, 3)
 	}
 
 	fmt.Printf("Starting gobject marker for directory %s on http://localhost:%d\n", imagePath, *port)
@@ -77,8 +75,7 @@ func serveInterface() {
 	err := http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
 
 	if err != nil {
-		fmt.Printf("Error serving static files: %v\n", err)
-		os.Exit(5)
+		logErrorAndExit(err, 4)
 	}
 }
 
@@ -172,6 +169,11 @@ func randomIntWithMax(max int) int {
 
 func imageUrlFor(image os.FileInfo) string {
 	return fmt.Sprintf("http://localhost:%d/images/%s", *port, image.Name())
+}
+
+func logErrorAndExit(err error, exitCode int) {
+	fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	os.Exit(exitCode)
 }
 
 func usage() {
