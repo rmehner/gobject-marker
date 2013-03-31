@@ -80,8 +80,6 @@ func serveInterface() {
 }
 
 func indexHandler(writer http.ResponseWriter, request *http.Request) {
-	logRequest(request)
-
 	if request.Method == "GET" && request.URL.Path == "/" {
 		fmt.Fprintf(writer, "INTERFACE ...")
 	} else {
@@ -90,8 +88,6 @@ func indexHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 func imagesHandler(writer http.ResponseWriter, request *http.Request) {
-	logRequest(request)
-
 	imageName := request.URL.Path[len("/images/"):]
 	pathToImage := filepath.Join(imagePath, imageName)
 	method := request.Method
@@ -144,8 +140,6 @@ func imagesHandler(writer http.ResponseWriter, request *http.Request) {
 }
 
 func randomImageHandler(writer http.ResponseWriter, request *http.Request) {
-	logRequest(request)
-
 	// @TODO
 	// * Do not ignore errors
 	// * better way to get random file in directory, current way will be slow
@@ -156,10 +150,6 @@ func randomImageHandler(writer http.ResponseWriter, request *http.Request) {
 
 	writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 	fmt.Fprintf(writer, string(imageUrlJson))
-}
-
-func logRequest(request *http.Request) {
-	log.Printf("%s %s", request.Method, request.URL.Path)
 }
 
 func randomIntWithMax(max int) int {
