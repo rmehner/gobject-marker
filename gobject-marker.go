@@ -143,17 +143,12 @@ func randomImageHandler(writer http.ResponseWriter, request *http.Request) {
 	// * Do not ignore errors
 	// * better way to get random file in directory, current way will be slow
 	files, _ := ioutil.ReadDir(imagePath)
-	randomImage := files[randomIntWithMax(len(files))]
+	randomImage := files[rand.Intn(len(files))]
 	imageUrl := Image{imageUrlFor(randomImage)}
 	imageUrlJson, _ := json.Marshal(imageUrl)
 
 	writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 	fmt.Fprintf(writer, string(imageUrlJson))
-}
-
-func randomIntWithMax(max int) int {
-	// there must be a cleaner way to do this
-	return int(rand.Float32() * float32(max))
 }
 
 func imageUrlFor(image os.FileInfo) string {
