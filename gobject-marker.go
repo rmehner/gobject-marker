@@ -17,13 +17,13 @@ type Image struct {
 }
 
 type MarkedObject struct {
-	X      int `json:"x"`
-	Y      int `json:"y"`
-	Width  int `json:"width"`
-	Height int `json:"height"`
+	X      uint `json:"x"`
+	Y      uint `json:"y"`
+	Width  uint `json:"width"`
+	Height uint `json:"height"`
 }
 
-var port = flag.Int("port", 8080, "the port the server listens to")
+var port = flag.Uint("port", 8080, "the port the server listens to")
 var outputFile = flag.String("outputFile", "./samples.txt", "path to the output file")
 var imagePath string
 var markedAbsPath string
