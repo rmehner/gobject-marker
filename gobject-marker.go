@@ -57,9 +57,9 @@ func main() {
 	}
 
 	// try to create the marked images directory
-	fileErr := os.Mkdir(markedAbsPath, 0666)
-	if fileErr != nil && !os.IsExist(fileErr) {
-		logErrorAndExit(fileErr, 3)
+	err = os.Mkdir(markedAbsPath, 0666)
+	if err != nil && !os.IsExist(err) {
+		logErrorAndExit(err, 3)
 	}
 
 	fmt.Printf("Starting gobject marker for directory %s on http://localhost:%d\n", imagePath, *port)
