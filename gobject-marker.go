@@ -170,7 +170,7 @@ func usage() {
 
 func appendToOutputfile(outputString string) (ret int, err error) {
 	// open up output file
-	outputFileHandle, err := os.OpenFile(outputAbsPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+	outputFileHandle, err := os.OpenFile(outputAbsPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error opening output file %s: %v\n", outputAbsPath, err)
