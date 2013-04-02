@@ -57,7 +57,7 @@ func main() {
 	}
 
 	// try to create the marked images directory
-	err = os.Mkdir(markedAbsPath, 0666)
+	err = os.Mkdir(markedAbsPath, 0755)
 	if err != nil && !os.IsExist(err) {
 		logErrorAndExit(err, 3)
 	}
