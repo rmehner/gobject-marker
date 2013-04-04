@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      canvas {
+        float: left;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="image"></canvas>
+    <input id="image_url" />
+    <input id="load_image" type="submit" value="Load image" />
+  </body>
+  <script src="image_part_selector.js"></script>
+  <script>
+    var imagePartSelector = new ImagePartSelector(
+      document.getElementById('image')
+    );
+
+    document.getElementById('load_image').addEventListener('click', function() {
+      var imageUrl = document.getElementById('image_url').value;
+      imagePartSelector.loadImage(imageUrl);
+    });
+  </script>
+</html>

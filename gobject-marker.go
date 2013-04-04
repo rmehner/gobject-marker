@@ -80,7 +80,11 @@ func serveInterface() {
 
 func indexHandler(writer http.ResponseWriter, request *http.Request) {
 	if request.Method == "GET" && request.URL.Path == "/" {
-		fmt.Fprintf(writer, "INTERFACE ...")
+		writer.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprintf(writer, string(indexHtml()))
+	} else if request.Method == "GET" && request.URL.Path == "/image_part_selector.js" {
+		writer.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+		fmt.Fprintf(writer, string(imagePartSelector()))
 	} else {
 		http.NotFound(writer, request)
 	}
