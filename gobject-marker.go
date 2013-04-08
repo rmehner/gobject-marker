@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -53,13 +54,13 @@ func main() {
 	// * check if we're allowed to write in that directory
 	_, err := os.Stat(imagePath)
 	if err != nil {
-		logErrorAndExit(err, 2)
+		log.Fatal(err)
 	}
 
 	// try to create the marked images directory
 	err = os.Mkdir(markedAbsPath, 0755)
 	if err != nil && !os.IsExist(err) {
-		logErrorAndExit(err, 3)
+		log.Fatal(err)
 	}
 
 	fmt.Printf("Starting gobject marker for directory %s on http://localhost:%d\n", imagePath, *port)
@@ -74,7 +75,7 @@ func serveInterface() {
 	err := http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
 
 	if err != nil {
-		logErrorAndExit(err, 4)
+		log.Fatal(err)
 	}
 }
 
@@ -157,11 +158,6 @@ func randomImageHandler(writer http.ResponseWriter, request *http.Request) {
 
 func imageUrlFor(image os.FileInfo) string {
 	return fmt.Sprintf("http://localhost:%d/images/%s", *port, image.Name())
-}
-
-func logErrorAndExit(err error, exitCode int) {
-	fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-	os.Exit(exitCode)
 }
 
 func usage() {
