@@ -106,6 +106,7 @@ func imagesHandler(writer http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error parsing request body: %v\n", err)
 			http.Error(writer, "Unprocessable Entitiy", 422)
+			return
 		}
 
 		var markedObjects []MarkedObject
@@ -114,6 +115,7 @@ func imagesHandler(writer http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error parsing JSON: %v\n", err)
 			http.Error(writer, "Unprocessable Entitiy", 422)
+			return
 		}
 
 		markedImagePath := filepath.Join(relPathToMarkedFromOutput, imageName)
@@ -129,16 +131,17 @@ func imagesHandler(writer http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error writing to file: %v\n", err)
 			http.Error(writer, "Error writing to output file", http.StatusInternalServerError)
-		} else {
-			// bad naming here, http.Error just sets a header and a text, but
-			// nothing that is related to an error.
-			http.Error(writer, "Marked objects added", http.StatusCreated)
+			return
+		}
 
-			err = os.Rename(pathToImage, markedImagePath)
+		// bad naming here, http.Error just sets a header and a text, but
+		// nothing that is related to an error.
+		http.Error(writer, "Marked objects added", http.StatusCreated)
 
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error moving file: %v\n", err)
-			}
+		err = os.Rename(pathToImage, markedImagePath)
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error moving file: %v\n", err)
 		}
 	} else {
 		http.Error(writer, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -176,6 +179,7 @@ func appendToOutputfile(outputString string) (ret int, err error) {
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error opening output file %s: %v\n", outputAbsPath, err)
+		return
 	}
 
 	// @TODO remember fileHandle to prevent reopening this file again & again
