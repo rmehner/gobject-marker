@@ -130,6 +130,8 @@ func imagesHandler(writer http.ResponseWriter, request *http.Request) {
 			fmt.Fprintf(os.Stderr, "Error writing to file: %v\n", err)
 			http.Error(writer, "Error writing to output file", http.StatusInternalServerError)
 		} else {
+			// bad naming here, http.Error just sets a header and a text, but
+			// nothing that is related to an error.
 			http.Error(writer, "Marked objects added", http.StatusCreated)
 
 			err = os.Rename(pathToImage, markedImagePath)
